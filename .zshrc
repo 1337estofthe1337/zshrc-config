@@ -11,11 +11,6 @@ precmd() { vcs_info }
 
 # Enables dynamic/customizable prompts in ZSH
 setopt PROMPT_SUBST
-# In order this formats the left prompt in 2 levels:
-# 1st level is red brackets around the CWD followed by vcs_info if present
-# 2nd level (new line) is the space where you type commands
-PROMPT='%F{red}[%F{magenta}%~%F{red}] ${vcs_info_msg_0_}%f
-$%{$reset_color%} '
 # Right side prompt that shows user@machine in red brackets
 RPROMPT='%F{red}[%F{yellow}%n%F{green}@%F{blue}%M%F{red}]'
 
@@ -47,6 +42,33 @@ zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
 # vi mode
 bindkey -v
 export KEYTIMEOUT=1
+
+# Function to set prompt color based on vi mode
+# In order this formats the left prompt in 2 levels:
+# 1st level is red brackets around the CWD followed by vcs_info if present
+# 2nd level (new line) is the space where you type commands
+function set_prompt_color_vi_mode {
+    if [[ $KEYMAP == vicmd ]]; then
+        PROMPT='%F{red}[%F{magenta}%~%F{red}] ${vcs_info_msg_0_}%f
+%F{yellow}V%{$reset_color%} '
+    else
+        PROMPT='%F{red}[%F{magenta}%~%F{red}] ${vcs_info_msg_0_}%f
+%F{green}$%{$reset_color%} '
+    fi
+}
+
+# Run the function to set initial prompt color
+set_prompt_color_vi_mode
+
+# Function to update prompt color when vi mode changes
+function zle-line-init zle-keymap-select {
+    set_prompt_color_vi_mode
+    zle reset-prompt
+}
+
+# Explicitly register zle-keymap-select and zle-line-init as ZLE widgets
+zle -N zle-keymap-select
+zle -N zle-line-init
 
 # Use vim keys in tab complete menu
 bindkey -M menuselect 'h' vi-backward-char
